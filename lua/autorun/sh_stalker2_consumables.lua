@@ -48,6 +48,7 @@ Convars
 		-- end
 	-- end
 -- end)
+
 --[[
 -----------------------------------------------------------------------------------------------------
 Ammo Tables
@@ -316,5 +317,30 @@ sound.Add( {
 		"weapons/stalker2/sausage/SFX_Sausage_2.ogg",
 		"weapons/stalker2/sausage/SFX_Sausage_3.ogg",
 		"weapons/stalker2/sausage/SFX_Sausage_4.ogg",
+    }
+} )
+----------------------------------------------------------------------------------------------------- Energy
+sound.Add( {
+    name = "Stalker2.EnergyOpen",
+    channel = CHAN_WEAPON,
+    volume = 1,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/energy/SFX_CA_Energy_Open_1.ogg",
+		"weapons/stalker2/energy/SFX_CA_Energy_Open_2.ogg",
+		"weapons/stalker2/energy/SFX_CA_Energy_Open_3.ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.EnergyShake",
+    channel = CHAN_WEAPON,
+    volume = 0.15,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/energy/SFX_CA_Energy_Shake_1.ogg",
+		"weapons/stalker2/energy/SFX_CA_Energy_Shake_2.ogg",
+		"weapons/stalker2/energy/SFX_CA_Energy_Shake_3.ogg",
     }
 } )

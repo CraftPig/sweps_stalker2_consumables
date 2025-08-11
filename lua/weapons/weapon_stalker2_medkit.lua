@@ -31,33 +31,22 @@ SWEP.BobScale = 0.75
 SWEP.Secondary.Ammo = "none"
 SWEP.Primary.Ammo = "medkit_general"
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 1
 SWEP.Primary.Automatic = false
 
-local INI_SEF = false
-local INI_VIVO = false
-local INI_AUX = false
+if file.Exists("lua/AIS/AIS_Items.lua","GAME") then
+	SWEP.Primary.DefaultClip = 0
+	SWEP.DrawAmmo = false
+else
+	SWEP.Primary.DefaultClip = 1
+	SWEP.DrawAmmo = true
+end
+
 local ID_WEAPON = "weapon_stalker2_medkit"
 local ID_PRIMARYAMMO = "medkit_general"
 
 function SWEP:Initialize()
     self:SetHoldType("slam")
-	
-	local FilePathSEF = "lua/SEF/SEF_Functions.lua"
-    if file.Exists(FilePathSEF, "GAME") then
-        INI_SEF = true
-    end
-	
-	local FilePathVIVO = "lua/autorun/ojsshared.lua"
-    if file.Exists(FilePathVIVO, "GAME") then
-        INI_VIVO = true
-    end
-	
-	local FilePathAUX = "lua/autorun/auxpower/core/power.lua"
-    if file.Exists(FilePathAUX, "GAME") then
-        INI_AUX = true
-    end
-end 
+end  
 
 function SWEP:Deploy()
     local owner = self:GetOwner() 
@@ -99,28 +88,30 @@ function SWEP:InitializeConsumable()
         if IsValid(owner) and owner:Alive() then
             self.Consuming = 0
 			
-			if owner:GetAmmoCount(self.Primary.Ammo) == 0 then 	
+			if owner:GetAmmoCount(self.Primary.Ammo) == 0 or file.Exists("lua/AIS/AIS_Items.lua","GAME") then 	
 				owner:StripWeapon(ID_WEAPON)
 			end
+			
 			if SERVER then owner:SelectWeapon(owner:GetPreviousWeapon()) end
         end
     end)
 end
 
-function SWEP:Heal(owner)
+function SWEP:Heal(owner)	
 	if IsValid(owner) and owner:GetActiveWeapon():GetClass() == ID_WEAPON then
 	
-		if INI_SEF == true and SERVER then
+		if file.Exists("lua/SEF/SEF_Functions.lua","GAME") and SERVER then
 			owner:ApplyEffect("Healing", 2.5, 1, 0.025)
 		end
 		
-		if INI_AUX == true then
+		if file.Exists("lua/autorun/auxpower/core/power.lua","GAME") then
 			-- AUXPOW:SetPower(owner, math.min(AUXPOW:GetPower(owner) + 0.5, 1));
 		end
 		
-		if INI_VIVO == true then
+		if file.Exists("lua/autorun/ojsshared.lua","GAME") then
 		end
 	end
+	
 	owner:RemoveAmmo(1, ID_PRIMARYAMMO) 
 	
 	-- owner:SetNWFloat("SaturationEffectStart", CurTime())
