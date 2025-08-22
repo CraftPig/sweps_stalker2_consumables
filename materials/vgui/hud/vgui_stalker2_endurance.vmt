@@ -1,6 +1,6 @@
 "UnlitGeneric"
 {
-	"$baseTexture" "vgui/hud/vgui_stalker2_bandage."
+	"$baseTexture" "vgui/hud/vgui_stalker2_endurance"
 	
 	"$translucent" "1"
 	"$vertexalpha" "1"

@@ -13,7 +13,7 @@ SWEP.Category = "S.T.A.L.K.E.R. 2"
 -- SWEP.Category1 = "EFT"
 -- SWEP.Category2 = "Medkits"
 
-SWEP.ViewModelFOV = 70
+SWEP.ViewModelFOV = 80
 SWEP.ViewModel = "models/weapons/sweps/stalker2/water/v_item_water.mdl"
 SWEP.WorldModel = "models/weapons/sweps/stalker2/water/w_item_water.mdl"
 SWEP.UseHands = true
@@ -33,13 +33,8 @@ SWEP.Primary.Ammo = "water"
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.Automatic = false
 
-if file.Exists("lua/AIS/AIS_Items.lua","GAME") then
-	SWEP.Primary.DefaultClip = 0
-	SWEP.DrawAmmo = false
-else
-	SWEP.Primary.DefaultClip = 1
-	SWEP.DrawAmmo = true
-end
+SWEP.Primary.DefaultClip = 1
+SWEP.DrawAmmo = true
 
 local ID_WEAPON = "weapon_stalker2_water"
 local ID_PRIMARYAMMO = "water"
@@ -67,31 +62,35 @@ end
 
 function SWEP:InitializeConsumable()
     local owner = self:GetOwner()
-    if not IsValid(owner) or not owner:IsPlayer() then return end
+    if not IsValid(self) or not owner:IsPlayer() then return end
 
     self:SendWeaponAnim(ACT_VM_PRIMARYATTACK)
 	local SequenceDuration = self:SequenceDuration()
 
     timer.Simple(SequenceDuration * 0.7, function() -- Call item effects.
-        if IsValid(owner) and owner:Alive() then
+        if IsValid(self) and owner:Alive() then
 			self:Heal(owner)
         end
     end)
 
     timer.Simple(SequenceDuration, function() -- End of logic, strip weapon.
-        if IsValid(owner) and owner:Alive() then
+        if IsValid(self) and owner:Alive() then
             self.Consuming = 0
 			
-			if owner:GetAmmoCount(self.Primary.Ammo) == 0 or file.Exists("lua/AIS/AIS_Items.lua","GAME") then 	
+			if owner:GetAmmoCount(self.Primary.Ammo) == 0 then 	
 				owner:StripWeapon(ID_WEAPON)
+			elseif owner:GetAmmoCount(self.Primary.Ammo) ~= 0 and file.Exists("lua/AIS/AIS_Items.lua","GAME") then
+				owner:AddAISItem("STALKER2Water",false)
+				owner:StripWeapon(ID_WEAPON) 
 			end
+			
 			if SERVER then owner:SelectWeapon(owner:GetPreviousWeapon()) end
         end
     end)
 end
 
 function SWEP:Heal(owner)
-	if IsValid(owner) and owner:GetActiveWeapon():GetClass() == ID_WEAPON then
+	if IsValid(self) and owner:GetActiveWeapon():GetClass() == ID_WEAPON then
 	
 		if file.Exists("lua/SEF/SEF_Functions.lua","GAME") and SERVER then
 		end
@@ -144,7 +143,7 @@ if CLIENT then -- Worldmodel offset
 	function SWEP:DrawWorldModel()
 		local owner = self:GetOwner()
 
-		if (IsValid(owner)) then
+		if (IsValid(self)) then
 			local offsetVec = Vector(3, -4, 3)
 			local offsetAng = Angle(-0, -0, -180)
 			

@@ -33,13 +33,8 @@ SWEP.Primary.Ammo = "medkit_general"
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.Automatic = false
 
-if file.Exists("lua/AIS/AIS_Items.lua","GAME") then
-	SWEP.Primary.DefaultClip = 0
-	SWEP.DrawAmmo = false
-else
-	SWEP.Primary.DefaultClip = 1
-	SWEP.DrawAmmo = true
-end
+SWEP.Primary.DefaultClip = 1
+SWEP.DrawAmmo = true
 
 local ID_WEAPON = "weapon_stalker2_medkit"
 local ID_PRIMARYAMMO = "medkit_general"
@@ -67,29 +62,32 @@ end
 
 function SWEP:InitializeConsumable()
     local owner = self:GetOwner()
-    if not IsValid(owner) or not owner:IsPlayer() then return end
+    if not IsValid(self) or not owner:IsPlayer() then return end
 
     self:SendWeaponAnim(ACT_VM_PRIMARYATTACK)
 	local SequenceDuration = self:SequenceDuration()
 	
 	timer.Simple(SequenceDuration * 0.3, function() -- Audio.
-        if IsValid(owner) and owner:Alive() then
+        if IsValid(self) and owner:Alive() then
 			owner:EmitSound("Stalker2.Healing")
         end
     end)
 
     timer.Simple(SequenceDuration * 0.34, function() -- Call item effects.
-        if IsValid(owner) and owner:Alive() then
+        if IsValid(self) and owner:Alive() then
 			self:Heal(owner)
         end
     end)
 
     timer.Simple(SequenceDuration, function() -- End of logic, strip weapon.
-        if IsValid(owner) and owner:Alive() then
+        if IsValid(self) and owner:Alive() then
             self.Consuming = 0
 			
-			if owner:GetAmmoCount(self.Primary.Ammo) == 0 or file.Exists("lua/AIS/AIS_Items.lua","GAME") then 	
+			if owner:GetAmmoCount(self.Primary.Ammo) == 0 then 	
 				owner:StripWeapon(ID_WEAPON)
+			elseif owner:GetAmmoCount(self.Primary.Ammo) ~= 0 and file.Exists("lua/AIS/AIS_Items.lua","GAME") then
+				owner:AddAISItem("STALKER2MedkitGeneral",false)
+				owner:StripWeapon(ID_WEAPON) 
 			end
 			
 			if SERVER then owner:SelectWeapon(owner:GetPreviousWeapon()) end
@@ -98,7 +96,7 @@ function SWEP:InitializeConsumable()
 end
 
 function SWEP:Heal(owner)	
-	if IsValid(owner) and owner:GetActiveWeapon():GetClass() == ID_WEAPON then
+	if IsValid(self) and owner:GetActiveWeapon():GetClass() == ID_WEAPON then
 	
 		if file.Exists("lua/SEF/SEF_Functions.lua","GAME") and SERVER then
 			owner:ApplyEffect("Healing", 2.5, 1, 0.025)
@@ -180,7 +178,7 @@ if CLIENT then
 	function SWEP:DrawWorldModel()
 		local owner = self:GetOwner()
 
-		if (IsValid(owner)) then
+		if (IsValid(self)) then
 			local offsetVec = Vector(3, -2, -1)
 			local offsetAng = Angle(-90, -0, -90)
 			

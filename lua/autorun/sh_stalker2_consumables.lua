@@ -2,31 +2,75 @@ AddCSLuaFile()
 
 --[[
 -----------------------------------------------------------------------------------------------------
-Subcategories
+Hooks
 -----------------------------------------------------------------------------------------------------
 ]]
--- list.Set("WeaponTreeIcons", "EFT", "logo16/logo_eftmedkit_16.png")
--- list.Set("WeaponTreeIcons", "EFT.Drugs", "logo16/logo_eftdrug_16.png")
--- list.Set("WeaponTreeIcons", "EFT.Stimulants", "logo16/logo_eftstim_16.png")
--- list.Set("WeaponTreeIcons", "EFT.Medkits", "logo16/logo_eftmedkit_16.png")
--- list.Set("WeaponTreeIcons", "EFT.Injury Treatment", "logo16/logo_eftinjury_16.png")
 
--- list.Set("WeaponTreeThumbnails", "EFT.Drugs", "entities/weapon_eft_augmentin.png")
--- list.Set("WeaponTreeThumbnails", "EFT.Stimulants", "entities/weapon_eft_injectoradrenaline.png")
--- list.Set("WeaponTreeThumbnails", "EFT.Medkits", "entities/weapon_eft_afak.png")
--- list.Set("WeaponTreeThumbnails", "EFT.Injury Treatment", "entities/weapon_eft_surgicalkit.png")
+if CLIENT then
+	hook.Add("AIS_InventoryTriggered", "HookGiveMissingStalker2Consumables", function(ply, isopen)
+		if IsValid(ply) and ply:Alive() then
+			net.Start("network_givemissingstalker2consumables")
+			net.WriteBool(isopen)
+			net.SendToServer()
+		end
+	end)
+end
 
---[[
------------------------------------------------------------------------------------------------------
-Particle Cache
------------------------------------------------------------------------------------------------------
-]]
--- if CLIENT then
-   -- game.AddParticles("particles/ep2/antlion_gib_02.pcf")
-   
-   -- PrecacheParticleSystem("antlion_gib_02_slime")
-   -- PrecacheParticleSystem("antlion_gib_02_juice")
--- end
+
+if SERVER then
+	util.AddNetworkString("network_givemissingstalker2consumables")
+	net.Receive("network_givemissingstalker2consumables", function(len, ply)
+		local isopen = net.ReadBool() 
+
+		if ply:GetAmmoCount("bread") >=2 then ply:AddAISItem("STALKER2Bread",false) end
+		if ply:GetAmmoCount("sausage") >=2 then ply:AddAISItem("STALKER2Sausage",false) end
+		if ply:GetAmmoCount("canned") >=2 then ply:AddAISItem("STALKER2Canned",false) end
+		if ply:GetAmmoCount("milk") >=2 then ply:AddAISItem("STALKER2Milk",false) end
+		if ply:GetAmmoCount("medkit_general") >=2 then ply:AddAISItem("STALKER2MedkitGeneral",false) end
+		if ply:GetAmmoCount("medkit_army") >=2 then ply:AddAISItem("STALKER2MedkitArmy",false) end
+		if ply:GetAmmoCount("medkit_scientific") >=2 then ply:AddAISItem("STALKER2MedkitScientific",false) end
+		if ply:GetAmmoCount("water") >=2 then ply:AddAISItem("STALKER2Water",false) end
+		if ply:GetAmmoCount("vodka") >=2 then ply:AddAISItem("STALKER2Vodka",false) end
+		if ply:GetAmmoCount("energy") >=2 then ply:AddAISItem("STALKER2Energy",false) end
+		if ply:GetAmmoCount("bandage") >=2 then ply:AddAISItem("STALKER2Bandage",false) end
+		if ply:GetAmmoCount("antirad") >=2 then ply:AddAISItem("STALKER2Antirad",false) end
+		
+		if ply:GetAmmoCount("regenerator") >=2 then ply:AddAISItem("STALKER2Revitalis",false) end
+		if ply:GetAmmoCount("enhancers") >=2 then ply:AddAISItem("STALKER2Endurance",false) end
+		
+	end)
+	
+
+	hook.Add("EntityTakeDamage", "HookStalker2ConsumablesDmg", function(target, dmg)
+		if IsValid(target) and target:IsPlayer() and not target:IsBot() then
+			
+            local expire = target:GetNW2Float("Stalker2ConsumablesRadiationTimer", 0)
+            if CurTime() >= expire then
+                target:SetNW2Float("Stalker2ConsumablesRadiationDmg", 0)
+            end
+			
+			local dmgTable = { 
+				DMG_RADIATION,
+				DMG_NERVEGAS,
+				DMG_POISON,
+				DMG_ACID,
+			}
+			for _, dmgType in pairs(dmgTable) do
+				if dmg:IsDamageType(dmgType) then
+					target:SetNW2Float("Stalker2ConsumablesRadiationTimer", CurTime() + 30)
+
+					local currentDmg = target:GetNW2Float("Stalker2ConsumablesRadiationDmg")
+					target:SetNW2Float("Stalker2ConsumablesRadiationDmg", currentDmg + dmg:GetDamage())
+				end
+			end
+			-- print("Tot Dmg: " .. target:GetNW2Float("Stalker2ConsumablesRadiationDmg"))
+        end
+	end)
+	
+	-- hook.Add("Think", "HookStalker2ConsumablesThink", function()
+	
+	-- end)
+end
 
 --[[
 -----------------------------------------------------------------------------------------------------
@@ -68,6 +112,9 @@ game.AddAmmoType( {
 name = "milk",
 } )
 game.AddAmmoType( {
+name = "antirad",
+} )
+game.AddAmmoType( {
 name = "medkit_general",
 } )
 game.AddAmmoType( {
@@ -84,6 +131,18 @@ name = "sausage",
 } )
 game.AddAmmoType( {
 name = "energy",
+} )
+game.AddAmmoType( {
+name = "bandage",
+} )
+game.AddAmmoType( {
+name = "blockers",
+} )
+game.AddAmmoType( {
+name = "enhancers",
+} )
+game.AddAmmoType( {
+name = "regenerator",
 } )
 
 --[[
@@ -112,6 +171,116 @@ sound.Add( {
     }
 } )
 
+
+----------------------------------------------------------------------------------------------------- Antirad
+sound.Add( {
+    name = "Stalker2.AntiradButton",
+    channel = CHAN_WEAPON,
+    volume = 0.7,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/antirad/S_Consumables_Antirad_Button_01 (SFX).ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.AntiradCap",
+    channel = CHAN_WEAPON,
+    volume = 0.7,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/antirad/S_Consumables_Antirad_Cap_01 (SFX).ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.AntiradInject",
+    channel = CHAN_WEAPON,
+    volume = 0.7,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/antirad/S_Consumables_Antirad_Inject_01 (SFX).ogg",
+    }
+} )
+----------------------------------------------------------------------------------------------------- Pills
+sound.Add( {
+    name = "Stalker2.Gulp",
+    channel = CHAN_ITEM,
+    volume = 0.7,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/pills/gulp.ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.PillsDrop",
+    channel = CHAN_STATIC,
+    volume = 0.5,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/pills/S_Consumables_Pills_Drop_01 (SFX).ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.PillsEat",
+    channel = CHAN_STATIC,
+    volume = 0.2,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/pills/S_Consumables_Pills_Eat_01 (SFX).ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.PillsOpen",
+    channel = CHAN_STATIC,
+    volume = 0.5,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/pills/S_Consumables_Pills_Open_01 (SFX).ogg",
+    }
+} )
+----------------------------------------------------------------------------------------------------- Bandage
+sound.Add( {
+    name = "Stalker2.BandageOpen",
+    channel = CHAN_WEAPON,
+    volume = 0.5,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/bandage/S_Consumables_Bandage_Open_01 (SFX).ogg",
+		"weapons/stalker2/bandage/S_Consumables_Bandage_Open_02 (SFX).ogg",
+		"weapons/stalker2/bandage/S_Consumables_Bandage_Open_03 (SFX).ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.BandagePick",
+    channel = CHAN_ITEM,
+    volume = 0.15,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/bandage/S_Consumables_Bandage_Pick_01 (SFX).ogg",
+		"weapons/stalker2/bandage/S_Consumables_Bandage_Pick_02 (SFX).ogg",
+		"weapons/stalker2/bandage/S_Consumables_Bandage_Pick_03 (SFX).ogg",
+    }
+} )
+sound.Add( {
+    name = "Stalker2.BandageRoll",
+    channel = CHAN_WEAPON,
+    volume = 0.25,
+    level = 65,
+    pitch = {95, 100},
+    sound = {
+        "weapons/stalker2/bandage/S_Consumables_Bandage_Roll_01 (SFX).ogg",
+		"weapons/stalker2/bandage/S_Consumables_Bandage_Roll_02 (SFX).ogg",
+		"weapons/stalker2/bandage/S_Consumables_Bandage_Roll_03 (SFX).ogg",
+    }
+} )
 ----------------------------------------------------------------------------------------------------- Vodka
 sound.Add( {
     name = "Stalker2.VodkaOn",
